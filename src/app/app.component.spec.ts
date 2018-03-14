@@ -1,27 +1,47 @@
-import { TestBed, async } from '@angular/core/testing';
+import {TestBed, async, fakeAsync, tick, ComponentFixture, discardPeriodicTasks} from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import {By} from '@angular/platform-browser';
+import {DebugElement} from '@angular/core';
+
 describe('AppComponent', () => {
-  beforeEach(async(() => {
+
+  let fixture: ComponentFixture<AppComponent>;
+  let el: DebugElement;
+
+  beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent
       ],
     }).compileComponents();
   }));
-  it('should create the app', async(() => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
+
+  beforeEach(fakeAsync(() => {
+    fixture = TestBed.createComponent(AppComponent);
+    el = fixture.debugElement;
   }));
-  it(`should have as title 'app'`, async(() => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('app');
-  }));
-  it('should render title in a h1 tag', async(() => {
-    const fixture = TestBed.createComponent(AppComponent);
+
+  [1, 2, 3, 4, 5].forEach(timing => {
+    it(`should show countdown after ${timing} seconds`, fakeAsync(() => {
+      const remaining = 5 - timing + 1;
+      fixture.detectChanges();
+      tick(timing * 1000);
+      fixture.detectChanges();
+      const message = el.query(By.css('h2'));
+      expect(toText(message)).toContain(`${remaining}`);
+      discardPeriodicTasks();
+    }));
+  });
+
+  it('should render complete message after 7 seconds', fakeAsync(() => {
     fixture.detectChanges();
-    const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('h1').textContent).toContain('Welcome to app!');
+    tick(7000);
+    fixture.detectChanges();
+    const message = el.query(By.css('h1.over-message'));
+    expect(toText(message)).toContain('It\'s OVER !!');
   }));
 });
+
+function toText(el: DebugElement) {
+  return el.nativeElement.innerHTML.trim();
+}
